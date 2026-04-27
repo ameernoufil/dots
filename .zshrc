@@ -82,11 +82,11 @@ source $ZSH/oh-my-zsh.sh
 # export LANG=en_US.UTF-8
 
 # Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='nvim'
-# fi
+if [[ -n $SSH_CONNECTION ]]; then
+  export EDITOR='vim'
+else
+  export EDITOR='nvim'
+fi
 
 # Compilation flags
 # export ARCHFLAGS="-arch $(uname -m)"
@@ -103,19 +103,22 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
+alias vim="nvim"
 alias vimzsh="vim ~/.zshrc"
 
-# Load private config/env varaibles
+# Autocompletion
+if [ -f "$HOME/Downloads/google-cloud-sdk/completion.zsh.inc" ]; then
+	source "$HOME/Downloads/google-cloud-sdk/completion.zsh.inc"
+fi
+
+if [ -s "$HOME/.bun/_bun" ]; then
+	source "$HOME/.bun/_bun"
+fi
+
+# Custom keybindings
+bindkey -s ^f "tmux-sessionizer\n"
+
+# Load local configs
 if [ -f "$HOME/.zshrc.local" ]; then
 	source "$HOME/.zshrc.local"
 fi
-
-if [ -f "$HOME/.config/bin/general" ]; then
-	source "$HOME/.config/bin/general"
-fi
-
-# Lookup for default scripts
-addToPathFront $HOME/bin
-
-# Run tmux-sessionizer
-bindkey -s ^f "tmux-sessionizer\n"

@@ -1,2 +1,5 @@
 # Env variables
+.zshenv
+
+# Local configs
 .zshrc.local
