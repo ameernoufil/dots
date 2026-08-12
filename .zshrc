@@ -107,7 +107,7 @@ alias vim="nvim"
 alias vimzsh="vim ~/.zshrc"
 
 # Autocompletion
-if [ -f "$HOME/Downloads/google-cloud-sdk/completion.zsh.inc" ]; then
+if [ -z "$SSH_CONNECTION" ] && [ -f "$HOME/Downloads/google-cloud-sdk/completion.zsh.inc" ]; then
 	source "$HOME/Downloads/google-cloud-sdk/completion.zsh.inc"
 fi
 
@@ -116,9 +116,20 @@ if [ -s "$HOME/.bun/_bun" ]; then
 fi
 
 # Custom keybindings
-bindkey -s ^f "tmux-sessionizer\n"
+bindkey -s ^f "sessionizer\n"
 
 # Load local configs
 if [ -f "$HOME/.zshrc.local" ]; then
 	source "$HOME/.zshrc.local"
 fi
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+# Prefer OrbStack kubectl over homebrew/gcloud
+export PATH="$HOME/.orbstack/bin:$PATH"
+
+# bun completions
+[ -s "/Users/ameer.noufil/.bun/_bun" ] && source "/Users/ameer.noufil/.bun/_bun"

@@ -1,0 +1,37 @@
+onboarding = false
+[keys]
+prefix = "ctrl+a"
+split_vertical = "prefix+%"
+split_horizontal = 'prefix+"'
+focus_pane_left = "prefix+h"
+focus_pane_down = "prefix+j"
+focus_pane_up = "prefix+k"
+focus_pane_right = "prefix+l"
+workspace_picker = "prefix+w"
+rename_tab = "prefix+r"
+new_worktree = ""
+remove_worktree = "prefix+shift+f"
+
+[[keys.command]]
+key = "prefix+f"
+type = "pane"
+command = "herdr-sessionizer"
+description = "find project folder"
+
+[[keys.command]]
+key = "prefix+t"
+type = "pane"
+command = "herdr-worktree-finder"
+description = "find worktree in current repository"
+
+[[keys.command]]
+key = "prefix+shift+t"
+type = "pane"
+command = "herdr-worktree-create"
+description = "create worktree"
+
+[ui]
+agent_panel_sort = "priority"
+
+[ui.toast]
+delivery = "system"
