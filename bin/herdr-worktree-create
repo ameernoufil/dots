@@ -1,0 +1,116 @@
+#!/usr/bin/env zsh
+
+current_worktree_root=$(git rev-parse --show-toplevel 2>/dev/null)
+if [[ -z $current_worktree_root ]]; then
+    print -u2 "Not inside a Git repository."
+    read "?Press Enter to close..."
+    exit 1
+fi
+
+# Herdr only creates or opens worktrees from the repository's parent
+# workspace. Git lists the main worktree first, so resolve it explicitly when
+# this helper is launched from an existing linked worktree.
+repo_root=$(
+    git -C "$current_worktree_root" worktree list --porcelain |
+        sed -n 's/^worktree //p' |
+        head -n 1
+)
+if [[ -z $repo_root ]]; then
+    print -u2 "Could not determine the repository's main worktree."
+    read "?Press Enter to close..."
+    exit 1
+fi
+
+# The picker reads remote-tracking refs, so refresh them before presenting any
+# branches. Do not fall back to stale refs when the remote cannot be reached.
+git -C "$repo_root" fetch origin --prune
+fetch_status=$?
+if (( fetch_status != 0 )); then
+    print -u2 "Failed to refresh branches from origin."
+    read "?Press Enter to close..."
+    exit $fetch_status
+fi
+
+target_output=$(
+    git -C "$repo_root" for-each-ref \
+        --format='%(refname:short)' \
+        refs/remotes/origin |
+        grep -v '/HEAD$' |
+        sort -u |
+        fzf \
+            --prompt="Worktree branch: " \
+            --header="Enter: use selected branch | >branch-name: create new branch" \
+            --print-query
+)
+fzf_status=$?
+
+# A no-match query is still useful: fzf prints it with --print-query, but exits
+# with status 1. Higher exit codes represent an actual abort or error.
+(( fzf_status > 1 )) && exit 0
+[[ -z $target_output ]] && exit 0
+
+# fzf prints the query first and the selected match second. A leading `>` makes
+# the typed query an explicit new branch even when fuzzy matches are present.
+typed_query=$(print -r -- "$target_output" | head -n 1)
+create_new_branch=false
+if [[ $typed_query == '>'* ]]; then
+    create_new_branch=true
+    target_ref=${typed_query#>}
+elif (( fzf_status == 0 )); then
+    target_ref=$(print -r -- "$target_output" | tail -n 1)
+else
+    print -u2 "No existing branch selected. Prefix a new branch with '>'."
+    read "?Press Enter to close..."
+    exit 1
+fi
+
+new_branch=${target_ref#origin/}
+
+if [[ -z $new_branch ]]; then
+    print -u2 "A new branch name is required."
+    read "?Press Enter to close..."
+    exit 1
+fi
+
+# Existing origin branches start their local worktree branch from that remote.
+# Only ask for a source branch when the user entered a new branch name.
+if [[ $create_new_branch == true ]] &&
+    git -C "$repo_root" show-ref --verify --quiet "refs/remotes/origin/$new_branch"; then
+    print -u2 "Branch '$new_branch' already exists on origin; omit '>' to select it."
+    read "?Press Enter to close..."
+    exit 1
+elif git -C "$repo_root" show-ref --verify --quiet "refs/remotes/origin/$new_branch"; then
+    base_branch="origin/$new_branch"
+else
+    source_branch=$(
+        git -C "$repo_root" for-each-ref \
+            --format='%(refname:short)' \
+            refs/remotes refs/heads |
+            grep -v '/HEAD$' |
+            sort -u |
+            fzf --prompt="Source branch: " --query="origin/"
+    )
+
+    [[ -z $source_branch ]] && exit 0
+
+    print -r -- "Branch '$new_branch' does not exist on origin."
+    read "create_branch?Create it from '$source_branch'? [y/N] "
+    if [[ $create_branch != [yY] ]]; then
+        exit 0
+    fi
+    base_branch="$source_branch"
+fi
+
+herdr worktree create \
+    --cwd "$repo_root" \
+    --branch "$new_branch" \
+    --base "$base_branch" \
+    --focus
+herdr_status=$?
+
+if (( herdr_status != 0 )); then
+    print -u2 -r -- \
+        "Failed to create worktree for branch '$new_branch' (herdr exited $herdr_status)."
+    read "?Press Enter to close..."
+    exit $herdr_status
+fi

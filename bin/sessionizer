@@ -1,0 +1,23 @@
+#!/usr/bin/env zsh
+
+# Select a project folder first
+selected=$({
+    find ~/ -mindepth 1 -maxdepth 1 -type d ! -path "$HOME/work" ! -path "$HOME/personal"
+    find ~/work ~/personal -mindepth 1 -maxdepth 2 -type d
+} | fzf)
+
+if [[ -z $selected ]]; then
+    exit 0
+fi
+
+# Then choose which multiplexer should open it
+multiplexer=$(printf '%s\n' "tmux" "herdr" | fzf --prompt="Open with: ")
+
+case $multiplexer in
+    tmux)
+        exec tmux-sessionizer "$selected"
+        ;;
+    herdr)
+        exec herdr-sessionizer "$selected"
+        ;;
+esac

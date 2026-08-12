@@ -1,0 +1,33 @@
+#!/usr/bin/env zsh
+
+# Select a folder using fzf
+if [[ $# -eq 1 ]]; then
+    selected=$1
+else
+    selected=$({
+        find ~/ -mindepth 1 -maxdepth 1 -type d ! -path "$HOME/work" ! -path "$HOME/personal"
+        find ~/work ~/personal -mindepth 1 -maxdepth 2 -type d
+    } | fzf)
+fi
+
+if [[ -z $selected ]]; then
+    exit 0
+fi
+
+selected_name=$(basename "$selected" | tr . _)
+
+# Inside Herdr, focus the project's workspace or create it when missing
+if [[ -n $HERDR_ENV ]]; then
+    workspace_id=$(herdr workspace list | jq -r --arg label "$selected_name" \
+        '.result.workspaces[] | select(.label == $label) | .workspace_id' | head -n 1)
+
+    if [[ -n $workspace_id ]]; then
+        exec herdr workspace focus "$workspace_id"
+    fi
+
+    exec herdr workspace create --cwd "$selected" --label "$selected_name" --focus
+fi
+
+# Outside Herdr, create or attach to a named session for the project
+cd "$selected" || exit 1
+exec herdr --session "$selected_name"

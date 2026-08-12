@@ -1,0 +1,64 @@
+#!/usr/bin/env zsh
+
+current_worktree_root=$(git rev-parse --show-toplevel 2>/dev/null)
+if [[ -z $current_worktree_root ]]; then
+    print -u2 "The current workspace is not inside a Git repository."
+    exit 1
+fi
+
+repo_root=$(
+    git -C "$current_worktree_root" worktree list --porcelain |
+        sed -n 's/^worktree //p' |
+        head -n 1
+)
+if [[ -z $repo_root ]]; then
+    print -u2 "Could not determine the repository's main worktree."
+    exit 1
+fi
+
+worktree_output=$(herdr worktree list --cwd "$repo_root")
+worktree_status=$?
+if (( worktree_status != 0 )); then
+    print -u2 "Failed to list worktrees for the current repository."
+    exit $worktree_status
+fi
+
+selected=$(
+    print -r -- "$worktree_output" |
+        jq -r '
+            .result.worktrees as $worktrees |
+            ($worktrees | map((.branch // "(detached)") | length) | max // 0) as $branch_width |
+            $worktrees[] |
+            (.branch // "(detached)") as $branch |
+            [
+                .path,
+                (.open_workspace_id // ""),
+                (
+                    (if .open_workspace_id then "●" else "○" end) +
+                    "  " +
+                    $branch +
+                    (" " * ($branch_width - ($branch | length) + 2)) +
+                    (.path | split("/") | last)
+                )
+            ] |
+            @tsv
+        ' |
+        fzf \
+            --delimiter=$'\t' \
+            --with-nth=3 \
+            --prompt="Worktree: " \
+            --header="● open  ○ closed | branch  directory | auto-opens on one match" \
+            --bind='one:accept'
+)
+
+[[ -z $selected ]] && exit 0
+
+selected_path=${selected%%$'\t'*}
+selected_fields=${selected#*$'\t'}
+workspace_id=${selected_fields%%$'\t'*}
+
+if [[ -n $workspace_id ]]; then
+    herdr workspace focus "$workspace_id"
+else
+    herdr worktree open --cwd "$repo_root" --path "$selected_path" --focus
+fi
