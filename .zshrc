@@ -122,7 +122,7 @@ bindkey -s ^f "sessionizer\n"
 if [ -f "$HOME/.zshrc.local" ]; then
 	source "$HOME/.zshrc.local"
 fi
-eval "$(/opt/homebrew/bin/brew shellenv)"
+command -v brew &>/dev/null && eval "$(brew shellenv)"
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
