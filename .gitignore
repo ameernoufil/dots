@@ -3,3 +3,6 @@
 
 # Local configs
 .zshrc.local
+
+# Python bytecode
+__pycache__/

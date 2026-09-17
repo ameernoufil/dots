@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+"""Stamp sidebar position numbers onto herdr spaces and agent panes as an $idx token.
+
+Herdr renders position numbers only in the collapsed sidebar; the expanded sidebar
+builds rows from tokens and has no index token. Custom metadata tokens do render as
+$name, so this daemon reports each space's and each agent pane's current sidebar
+position as the token "idx".
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
+import sys
+import time
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "lib"))
+
+from herdr_numbering import (  # noqa: E402
+    agent_order,
+    agent_panel_sort,
+    run,
+    snapshot,
+    visible_workspace_order,
+)
+
+SOURCE = "sidebar-numbers"
+TOKEN = "idx"
+
+
+def desired_numbers(sort: str) -> dict[str, dict[str, str]]:
+    snap = snapshot()
+    workspaces = snap.get("workspaces", [])
+    spaces = {
+        workspaces[ws_index]["workspace_id"]: str(position)
+        for position, ws_index in enumerate(visible_workspace_order(workspaces), start=1)
+    }
+    panes = {
+        agent["pane_id"]: str(position)
+        for position, agent in enumerate(agent_order(snap.get("agents", []), sort), start=1)
+    }
+    return {"workspace": spaces, "pane": panes}
+
+
+def stamp(kind: str, target: str, value: str | None) -> None:
+    args = [kind, "report-metadata", target, "--source", SOURCE]
+    args += ["--clear-token", TOKEN] if value is None else ["--token", f"{TOKEN}={value}"]
+    run(args)
+
+
+def sync(previous: dict[str, dict[str, str]], sort: str) -> dict[str, dict[str, str]]:
+    current = desired_numbers(sort)
+    for kind in ("workspace", "pane"):
+        old, new = previous.get(kind, {}), current[kind]
+        for target, value in new.items():
+            if old.get(target) != value:
+                stamp(kind, target, value)
+        for target in old.keys() - new.keys():
+            try:
+                stamp(kind, target, None)
+            except RuntimeError:
+                pass  # target is gone; its metadata went with it
+    return current
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--interval", type=float, default=2.0, help="seconds between polls")
+    parser.add_argument("--once", action="store_true", help="stamp once and exit")
+    args = parser.parse_args()
+
+    sort = agent_panel_sort()
+    previous: dict[str, dict[str, str]] = {}
+    while True:
+        try:
+            previous = sync(previous, sort)
+        except Exception as error:  # server restart, socket churn, transient CLI failure
+            print(f"herdr-sidebar-numbers: {error}", file=sys.stderr, flush=True)
+            previous = {}
+        if args.once:
+            return 0
+        time.sleep(args.interval)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

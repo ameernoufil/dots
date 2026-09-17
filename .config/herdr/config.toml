@@ -11,6 +11,7 @@ workspace_picker = "prefix+w"
 rename_tab = "prefix+r"
 new_worktree = ""
 remove_worktree = "prefix+shift+f"
+focus_agent = "prefix+shift+1..9"
 
 [[keys.command]]
 key = "prefix+f"
@@ -32,6 +33,15 @@ description = "create worktree"
 
 [ui]
 agent_panel_sort = "priority"
+prompt_new_tab_name = false
+
+status_indicators = "dots"
+show_agent_labels_on_pane_borders = false
+[ui.sidebar.spaces]
+rows = [["$idx", "state_icon", "workspace"], ["branch", "git_status"]]
+
+[ui.sidebar.agents]
+rows = [["$idx", "state_icon", "workspace", "tab"], ["agent"]]
 
 [ui.toast]
 delivery = "system"

@@ -118,6 +118,9 @@ fi
 # Custom keybindings
 bindkey -s ^f "sessionizer\n"
 
+# fzf-git: CTRL-G CTRL-{F,B,T,R,H,S,L,W,E}, CTRL-G ? for the list
+[ -f "$HOME/bin/fzf-git.sh" ] && source "$HOME/bin/fzf-git.sh"
+
 # Load local configs
 if [ -f "$HOME/.zshrc.local" ]; then
 	source "$HOME/.zshrc.local"

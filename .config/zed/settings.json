@@ -1,0 +1,191 @@
+// Zed settings — https://zed.dev/docs/configuring-zed
+// `zed: open default settings` in the command palette shows every default.
+{
+  // ─── Editor ────────────────────────────────────────────────────────────────
+  "cli_default_open_behavior": "new_window",
+  // 2 is the default; the 4-space languages override it below.
+  "tab_size": 2,
+  "hard_tabs": false,
+  // Zed's own defaults only set tab_size for a handful of languages, so
+  // anything not listed here inherits the global 2.
+  "languages": {
+    "Rust": { "tab_size": 4 },
+    "Python": { "tab_size": 4 },
+    "C": { "tab_size": 4 },
+    "C++": { "tab_size": 4 },
+    "Go": { "tab_size": 4, "hard_tabs": true }
+  },
+  "relative_line_numbers": "enabled",
+  "seed_search_query_from_cursor": "selection",
+  "use_smartcase_search": true,
+  "sticky_scroll": { "enabled": false },
+  // nvim-style virtual text: the message rides at the end of the offending line
+  "diagnostics": {
+    "inline": {
+      "enabled": true,
+      // let typing settle before repainting
+      "update_debounce_ms": 150,
+      // gap between the code and the message, in columns
+      "padding": 4,
+      // never start a message left of this column, so they line up
+      "min_column": 0
+    }
+  },
+  // auto | system | always | never. Panels inherit this unless they override.
+  "scrollbar": { "show": "never" },
+  // padding only — toggle the mode itself with workspace::ToggleCenteredLayout
+  "centered_layout": {
+    "left_padding": 0.15,
+    "right_padding": 0.15
+  },
+
+  // small | medium | large | xlarge | full
+  "file_finder": {
+    "modal_max_width": "xlarge",
+    "skip_focus_for_active_in_search": true
+  },
+
+  // ─── Vim ───────────────────────────────────────────────────────────────────
+  "vim_mode": true,
+  "vim": {
+    "use_system_clipboard": "on_yank",
+    "use_smartcase_find": true,
+    "highlight_on_yank_duration": 200
+  },
+
+  // ─── Appearance ────────────────────────────────────────────────────────────
+  "ui_font_size": 16,
+  "buffer_font_size": 15,
+  "theme": {
+    "mode": "dark",
+    "light": "One Light",
+    "dark": "Aura Dark"
+  },
+  "icon_theme": {
+    "mode": "dark",
+    "light": "Zed (Default)",
+    "dark": "Warm Charmed Icons"
+  },
+  "title_bar": {
+    "show_onboarding_banner": false,
+    "show_project_items": false,
+    "show_branch_name": false,
+    "show_user_menu": false
+  },
+
+  // Translucent blur, matching Ghostty (background-opacity 0.80 = alpha "cc").
+  // Layering rule: surfaces stack, so alpha compounds. "background" carries the
+  // only tint and everything drawn over it stays fully transparent. The title
+  // bar and status bar paint straight on the window, so they need their own.
+  "experimental.theme_overrides": {
+    "background.appearance": "blurred",
+    // Ghostty parity: near-black at 0.85. #0a090d is barely lifted off pure
+    // #000000 so it is not flat black, but stays dark. Raise alpha to darken.
+    "background": "#0a090dd9",
+    "title_bar.background": "#0a090dd9",
+    "title_bar.inactive_background": "#0a090dd9",
+    "status_bar.background": "#0a090dd9",
+
+    "surface.background": "#00000000",
+    "editor.background": "#00000000",
+    "editor.gutter.background": "#00000000",
+    "editor.subheader.background": "#00000000",
+    "terminal.background": "#00000000",
+    "panel.background": "#00000000",
+    "tab_bar.background": "#00000000",
+    "tab.active_background": "#00000000",
+    "tab.inactive_background": "#0000004d",
+    "toolbar.background": "#00000000",
+    "scrollbar.track.background": "#00000000",
+
+    // solid — blur behind floating UI reads as mud
+    "elevated_surface.background": "#15141c",
+
+    // separation the transparent surfaces would otherwise lose.
+    // Aura-tinted, not white — plain white washes clash with the purple palette.
+    "editor.active_line.background": "#a394f01f",
+    "border": "#af8aff29",
+    "border.variant": "#af8aff29",
+    "panel.focused_border": "#af8aff7f",
+
+    // Aura sets line numbers to #a394f033 — 20% alpha, invisible over blur
+    "editor.line_number": "#8f88ad",
+    "editor.active_line_number": "#edecee",
+
+    // Aura's defaults assume an opaque background; over blur they wash out.
+    // text.muted drives project-panel entries, breadcrumbs and tab paths.
+    "text.muted": "#b8b6bd",
+    "text.disabled": "#6f6a85",
+    "icon": "#a9a7ae",
+    "icon.muted": "#c4c2c8",
+    // hover/selected need alpha or they paint opaque blocks over the blur
+    "element.hover": "#a394f024",
+    "element.selected": "#3d375e99",
+    "ghost_element.hover": "#a394f024",
+    "ghost_element.selected": "#3d375e99",
+
+    // same wash problem, same fix
+    "search.match_background": "#3d375e",
+
+    "editor.document_highlight.read_background": "#00000000",
+    "editor.document_highlight.write_background": "#00000000",
+
+    // Full player set. Each entry needs background + selection, not just cursor:
+    // players[0].selection is the visual-mode selection color for every buffer.
+    // Aura ships selections at 50% alpha, tuned for an OPAQUE background. This
+    // window is translucent, so ANY alpha below ff lets the wallpaper through
+    // and the selection reads lighter or darker depending on what is behind
+    // the window. Fully opaque, Aura's own hues, so it looks the same anywhere.
+    "players": [
+      { "cursor": "#BD9DFF", "background": "#BD9DFF", "selection": "#3d375e" },
+      { "cursor": "#61ffca", "background": "#61ffca", "selection": "#295848" },
+      { "cursor": "#ffca85", "background": "#ffca85", "selection": "#594a35" },
+      { "cursor": "#9dff65", "background": "#9dff65", "selection": "#3b582a" },
+      { "cursor": "#ff6767", "background": "#ff6767", "selection": "#582b2b" },
+      { "cursor": "#f694ff", "background": "#f694ff", "selection": "#573a5a" },
+      { "cursor": "#82e2ff", "background": "#82e2ff", "selection": "#345159" }
+    ],
+    "syntax": {
+      "comment": { "font_style": "italic" },
+      "comment.doc": { "font_style": "italic" }
+    }
+  },
+
+  // ─── Panels ────────────────────────────────────────────────────────────────
+  "project_panel": {
+    "dock": "right",
+    "default_width": 400,
+    "hide_root": true,
+    "auto_fold_dirs": false,
+    "starts_open": false,
+    "git_status": false,
+    "sticky_scroll": false,
+    "scrollbar": { "show": "never" },
+    "indent_guides": { "show": "never" }
+  },
+  "outline_panel": { "dock": "left" },
+  "collaboration_panel": { "dock": "left" },
+  "git_panel": {
+    "dock": "right",
+    "default_width": 400,
+    "tree_view": true,
+    "group_by": "staging"
+  },
+  "agent": {
+    "dock": "right",
+    "favorite_models": [],
+    "model_parameters": []
+  },
+
+  // ─── Git ───────────────────────────────────────────────────────────────────
+  "diff_view_style": "split",
+
+  // ─── Privacy ───────────────────────────────────────────────────────────────
+  "disable_ai": true,
+  "edit_predictions": { "provider": "zed" },
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false,
+    "anthropic_retention": false
+  }
+}

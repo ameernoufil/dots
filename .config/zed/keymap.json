@@ -1,0 +1,435 @@
+// Zed keymap — mirrors ~/dotfiles/.config/nvim keymaps
+// leader = space (Zed vim has no leader concept; space is just a normal-mode key)
+[
+  // ── the leader, everywhere it can safely exist ──
+  // Zed has no global leader: "space" is a plain key, meaningful only in the
+  // context that owns focus. Excluding Editor / Terminal / Picker / menu keeps
+  // space literal wherever text is typed, and lets it be the leader everywhere
+  // else — panels, lists, empty panes. Editors get the same chords from the
+  // VimControl block below, which is where the buffer-specific ones also live.
+  {
+    "context": "Workspace && !Editor && !Terminal && !Picker && !menu",
+    "bindings": {
+      "space p f": "file_finder::Toggle",
+      "space p g": "pane::DeploySearch",
+      "space p e": "project_panel::ToggleFocus",
+      "space p p": "projects::OpenRecent",
+      "space p s": "project_symbols::Toggle",
+      "space p o": "outline::Toggle",
+      "space g s": "git_panel::ToggleFocus",
+      "space g d": "git::Diff",
+      "space g w": "git::Worktree",
+      "space g shift-C": "git::Branch",
+      "space g shift-B": "branches::OpenRecent",
+      "space b b": "tab_switcher::Toggle",
+      "space b f": "file_finder::Toggle",
+      "space space": "tab_switcher::Toggle",
+      "space l v": "zed::Extensions",
+      "space l d": "diagnostics::Deploy",
+      "space w e": "project_panel::ToggleFocus",
+      "space w g": "git_panel::ToggleFocus",
+      "space w u": "outline_panel::ToggleFocus",
+      "space w t": "terminal_panel::ToggleFocus",
+      "space p q": "workspace::ToggleRightDock",
+      "space u": "git::Diff",
+
+      // Pane and tab switching. The whole point is reaching a buffer FROM a
+      // panel, so they must exist outside the editor. They stay duplicated in
+      // VimControl below, because this block deliberately excludes editors.
+      "space w h": "workspace::ActivatePaneLeft",
+      "space w j": "workspace::ActivatePaneDown",
+      "space w k": "workspace::ActivatePaneUp",
+      "space w l": "workspace::ActivatePaneRight",
+      "space w w": "workspace::ActivateNextPane",
+      "space w p": "workspace::ActivatePreviousPane",
+      "space w v": "pane::SplitVertical",
+      "space w s": "pane::SplitHorizontal",
+      "space w q": "pane::CloseActiveItem",
+      "space w o": "workspace::CloseInactiveTabsAndPanes",
+      "space w x": "workspace::SwapPaneAdjacent",
+      "space w shift-h": "workspace::MovePaneLeft",
+      "space w shift-j": "workspace::MovePaneDown",
+      "space w shift-k": "workspace::MovePaneUp",
+      "space w shift-l": "workspace::MovePaneRight",
+      "space b n": "pane::ActivateNextItem",
+      "space b p": "pane::ActivatePreviousItem",
+      "space b l": "pane::ActivateLastItem",
+      "space b a": "pane::AlternateFile",
+      "space b d": "pane::CloseActiveItem",
+      "space b 1": ["pane::ActivateItem", 0],
+      "space b 2": ["pane::ActivateItem", 1],
+      "space b 3": ["pane::ActivateItem", 2],
+      "space b 4": ["pane::ActivateItem", 3],
+      "space b 5": ["pane::ActivateItem", 4],
+      "space b 6": ["pane::ActivateItem", 5],
+      "space b 7": ["pane::ActivateItem", 6],
+      "space b 8": ["pane::ActivateItem", 7],
+      "space b 9": ["pane::ActivateItem", 8]
+    }
+  },
+  // ── normal + visual (VimControl == normal, visual, operator-pending) ──
+  {
+    "context": "VimControl && !menu",
+    "bindings": {
+      // <leader>y  ->  "+y   (yank to system clipboard)
+      "space y": ["workspace::SendKeystrokes", "\" + y"],
+
+      // <leader>pf / <leader>pg  ->  telescope find_files / live_grep
+      "space p f": "file_finder::Toggle",
+      "space p g": "pane::DeploySearch",
+      // <leader>pe  ->  netrw / :Ex
+      "space p e": "project_panel::ToggleFocus",
+      // hide the dock entirely (netrw has no analog)
+      "space p q": "workspace::ToggleRightDock",
+
+      // <leader>gs  ->  fugitive :Git status
+      "space g s": "git_panel::ToggleFocus",
+      // extra git, no nvim counterpart yet
+      "space g d": "git::Diff",
+      "space g b": "editor::ToggleGitBlame",
+
+      // whole-file staging has no editor-side action — git::StageFile is
+      // registered on the git panel only. Stage from there with s / u.
+      // Hunk under the cursor, which DOES work in a buffer. a / u mirror the
+      // panel's stage / unstage; t flips whichever way the hunk currently is.
+      "space g h a": "git::StageAndNext",
+      "space g h u": "git::UnstageAndNext",
+      "space g h t": "git::ToggleStaged",
+      "space g h r": "git::Restore",
+
+      // <leader>lv  ->  :Lazy (plugin manager -> Zed extensions)
+      "space l v": "zed::Extensions",
+
+      // LSP block from lua/plugins/lsp.lua
+      "space l a": "editor::ToggleCodeActions",
+      "space l f": "editor::Format",
+      "space l r": "editor::Rename",
+      "space l d": "diagnostics::Deploy",
+      "space l h": "editor::ToggleInlayHints",
+      "space l i": "editor::ToggleInlineDiagnostics",
+      // K = hover is already Zed's vim default
+
+      // <leader>u  ->  undotree. Zed has no undo tree; nearest is the diff view.
+      "space u": "git::Diff",
+
+      // extras that pair with the telescope muscle memory
+      "space p s": "project_symbols::Toggle",
+      "space p o": "outline::Toggle",
+      "space space": "tab_switcher::Toggle",
+
+      "g r": "editor::FindAllReferences",
+      "g i": "editor::GoToImplementation",
+      "g y": "editor::GoToTypeDefinition",
+
+      // ── <leader>g git / worktree ──
+      "space g w": "git::Worktree",
+      "space g shift-B": "branches::OpenRecent",
+      "space g shift-C": "git::Branch",
+      "space p p": "projects::OpenRecent",
+
+      // ── <leader>b buffer layer ──
+      // open buffers only — MRU order, no query input (nav with j / k, d closes)
+      "space b b": "tab_switcher::Toggle",
+      // same, across every pane
+      "space b shift-B": "tab_switcher::ToggleAll",
+      // all project files, type-to-filter (Zed has no open-buffers-only filter)
+      "space b f": "file_finder::Toggle",
+      "space b n": "pane::ActivateNextItem",
+      "space b p": "pane::ActivatePreviousItem",
+      "space b l": "pane::ActivateLastItem",
+      "space b a": "pane::AlternateFile",
+      "space b d": "pane::CloseActiveItem",
+      "space b o": "pane::CloseInactiveItems",
+      "space b c": "pane::CloseCleanItems",
+      "space b h": "pane::CloseItemsToTheLeft",
+      "space b k": "pane::CloseItemsToTheRight",
+      "space b shift-d": "pane::CloseAllItems",
+      "space b shift-p": "pane::TogglePinTab",
+      "space b r": "pane::RevealInProjectPanel",
+      "space b 1": ["pane::ActivateItem", 0],
+      "space b 2": ["pane::ActivateItem", 1],
+      "space b 3": ["pane::ActivateItem", 2],
+      "space b 4": ["pane::ActivateItem", 3],
+      "space b 5": ["pane::ActivateItem", 4],
+      "space b 6": ["pane::ActivateItem", 5],
+      "space b 7": ["pane::ActivateItem", 6],
+      "space b 8": ["pane::ActivateItem", 7],
+      "space b 9": ["pane::ActivateItem", 8],
+      // vim ctrl-^ : jump to alternate (previous) buffer
+      "ctrl-6": "pane::AlternateFile",
+
+      // ── <leader>w window layer (same as ctrl-w, which still works) ──
+      "space w h": "workspace::ActivatePaneLeft",
+      "space w j": "workspace::ActivatePaneDown",
+      "space w k": "workspace::ActivatePaneUp",
+      "space w l": "workspace::ActivatePaneRight",
+      "space w w": "workspace::ActivateNextPane",
+      "space w p": "workspace::ActivatePreviousPane",
+      "space w v": "pane::SplitVertical",
+      "space w s": "pane::SplitHorizontal",
+      "space w q": "pane::CloseActiveItem",
+      "space w o": "workspace::CloseInactiveTabsAndPanes",
+      "space w x": "workspace::SwapPaneAdjacent",
+      "space w shift-h": "workspace::MovePaneLeft",
+      "space w shift-j": "workspace::MovePaneDown",
+      "space w shift-k": "workspace::MovePaneUp",
+      "space w shift-l": "workspace::MovePaneRight",
+      "space w >": "vim::ResizePaneRight",
+      "space w <": "vim::ResizePaneLeft",
+      "space w -": "vim::ResizePaneDown",
+      "space w +": "vim::ResizePaneUp",
+      "space w _": "vim::MaximizePane",
+      "space w =": "vim::ResetPaneSizes",
+
+      // docks are NOT panes — ctrl-w/space-w h j k l cannot reach them
+      "space w e": "project_panel::ToggleFocus",
+      "space w g": "git_panel::ToggleFocus",
+      "space w u": "outline_panel::ToggleFocus",
+      "space w t": "terminal_panel::ToggleFocus"
+    }
+  },
+
+  // ── git panel ──
+  // Zed ships NO vim nav here, and binds bare "space" to git::ToggleStaged,
+  // which swallowed the leader. Reclaim the leader; staging moves to s / u.
+  {
+    "context": "GitPanel && ChangesList && !GitBranchSelector && !GitRepositorySelector",
+    "bindings": {
+      "j": "git_panel::NextEntry",
+      "k": "git_panel::PreviousEntry",
+      "h": "git_panel::CollapseSelectedEntry",
+      "l": "git_panel::ExpandSelectedEntry",
+      "g g": "git_panel::FirstEntry",
+      "shift-g": "git_panel::LastEntry",
+
+      // open the diff AND jump to it. menu::Confirm opens but leaves focus in
+      // the panel, and no action carries a focus option, so this sends "g f"
+      // (Zed's vim binding for menu::Confirm) then the helper below.
+      // Sending "enter" here instead would re-trigger this binding recursively.
+      "enter": ["workspace::SendKeystrokes", "g f ctrl-alt-shift-w"],
+      "ctrl-alt-shift-w": "workspace::FocusCenterPane",
+
+      // staging, off the leader key
+      "s": "git::StageFile",
+      "u": "git::UnstageFile",
+      "-": "git::ToggleStaged",
+      "shift-r": ["git::RestoreFile", { "skip_prompt": false }],
+      "c": "git_panel::FocusEditor",
+      "q": "git_panel::ToggleFocus",
+
+      // Zed binds bare "space" here to git::ToggleStaged, which would swallow
+      // the leader. The umbrella block reclaims it; staging moved to s / u.
+      // Same chord that opened the dock closes it:
+      "space g s": "workspace::ToggleRightDock",
+
+      // The global block cannot reach here: this context claims the
+      // "space g" prefix, and a deeper context owning a prefix shadows
+      // every longer chord starting with it. So the set is repeated.
+      "space p f": "file_finder::Toggle",
+      "space p g": "pane::DeploySearch",
+      "space p e": "project_panel::ToggleFocus",
+      "space p p": "projects::OpenRecent",
+      "space p s": "project_symbols::Toggle",
+      "space p o": "outline::Toggle",
+      "space g d": "git::Diff",
+      "space g w": "git::Worktree",
+      "space g shift-C": "git::Branch",
+      "space g shift-B": "branches::OpenRecent",
+      "space b b": "tab_switcher::Toggle",
+      "space b f": "file_finder::Toggle",
+      "space space": "tab_switcher::Toggle",
+      "space l v": "zed::Extensions",
+      "space l d": "diagnostics::Deploy",
+      "space w e": "project_panel::ToggleFocus",
+      "space w g": "git_panel::ToggleFocus",
+      "space w u": "outline_panel::ToggleFocus",
+      "space w t": "terminal_panel::ToggleFocus",
+      "space p q": "workspace::ToggleRightDock",
+      "space u": "git::Diff",
+      "space w h": "workspace::ActivatePaneLeft",
+      "space w j": "workspace::ActivatePaneDown",
+      "space w k": "workspace::ActivatePaneUp",
+      "space w l": "workspace::ActivatePaneRight",
+      "space w w": "workspace::ActivateNextPane",
+      "space w p": "workspace::ActivatePreviousPane",
+      "space w v": "pane::SplitVertical",
+      "space w s": "pane::SplitHorizontal",
+      "space w q": "pane::CloseActiveItem",
+      "space w o": "workspace::CloseInactiveTabsAndPanes",
+      "space w x": "workspace::SwapPaneAdjacent",
+      "space w shift-h": "workspace::MovePaneLeft",
+      "space w shift-j": "workspace::MovePaneDown",
+      "space w shift-k": "workspace::MovePaneUp",
+      "space w shift-l": "workspace::MovePaneRight",
+      "space b n": "pane::ActivateNextItem",
+      "space b p": "pane::ActivatePreviousItem",
+      "space b l": "pane::ActivateLastItem",
+      "space b a": "pane::AlternateFile",
+      "space b d": "pane::CloseActiveItem",
+      "space b 1": ["pane::ActivateItem", 0],
+      "space b 2": ["pane::ActivateItem", 1],
+      "space b 3": ["pane::ActivateItem", 2],
+      "space b 4": ["pane::ActivateItem", 3],
+      "space b 5": ["pane::ActivateItem", 4],
+      "space b 6": ["pane::ActivateItem", 5],
+      "space b 7": ["pane::ActivateItem", 6],
+      "space b 8": ["pane::ActivateItem", 7],
+      "space b 9": ["pane::ActivateItem", 8]
+    }
+  },
+
+  // ── pickers (file finder, worktree, branches, recent projects) ──
+  // No settings key exists for the preview pane — it is action-only, and the
+  // state persists in Zed's database. cmd-alt-p toggles; press once to kill it.
+  {
+    "context": "Picker || FileFinder || (FileFinder > Picker > Editor)",
+    "bindings": {
+      "cmd-alt-p": "picker::TogglePreview",
+      "alt-h": "picker::SetPreviewHidden",
+      "alt-r": "picker::SetPreviewRight",
+      "alt-b": "picker::SetPreviewBelow"
+    }
+  },
+
+  // ── remaining panels ──
+  // VimControl matches editors only, so every panel needs the leader repeated.
+  // deltas only — the leader chords come from the umbrella block above
+  {
+    "context": "OutlinePanel && not_editing",
+    "bindings": {
+      "q": "outline_panel::ToggleFocus"
+    }
+  },
+
+  // ── search results / multibuffer (quickfix analog) ──
+  // Project search results are a multibuffer editor. Each match block is an
+  // "excerpt"; these move between excerpts, not between raw text matches.
+  {
+    "context": "Editor && multibuffer && vim_mode == normal",
+    "bindings": {
+      "] q": "editor::MoveToStartOfNextExcerpt",
+      "[ q": "editor::MoveToEndOfPreviousExcerpt",
+      "shift-n": "editor::MoveToStartOfNextExcerpt",
+      "shift-p": "editor::MoveToEndOfPreviousExcerpt",
+      // open the excerpt under the cursor as a real buffer
+      "enter": "editor::OpenExcerpts",
+      "g o": "editor::OpenExcerpts",
+      "g s": "editor::OpenExcerptsSplit"
+    }
+  },
+
+  // ── project search input box ──
+  {
+    "context": "ProjectSearchBar > Editor",
+    "bindings": {
+      "ctrl-n": "search::NextHistoryQuery",
+      "ctrl-p": "search::PreviousHistoryQuery",
+      "escape": "project_search::ToggleFocus"
+    }
+  },
+
+  // ── tab switcher (MRU cycler, no text input) ──
+  {
+    "context": "TabSwitcher",
+    "bindings": {
+      "j": "menu::SelectNext",
+      "k": "menu::SelectPrevious",
+      "d": "tab_switcher::CloseSelectedItem",
+      "escape": "menu::Cancel"
+    }
+  },
+
+  // ── project panel ──
+  // Zed's vim keymap already ships a "netrw compatibility" block:
+  //   j k h l  gg G  -  ctrl-u ctrl-d  z t/z z/z b  ] c [ c  ] d [ d  { }
+  //   enter/t open, v vsplit, o split, p preview, % new file, d new dir,
+  //   shift-r rename, shift-d delete, / search-in-dir, escape back to editor
+  // Only the deltas are below.
+  {
+    "context": "ProjectPanel && not_editing",
+    "bindings": {
+      // open the file AND jump to the editor. No action carries a focus option,
+      // so this sends "t" (OpenPermanent) then "escape" (back to the editor).
+      // Sending "enter" here instead would re-trigger this binding recursively.
+      //
+      // The panel exposes only editing/not_editing as context keys, so this
+      // cannot branch on file vs directory: enter on a DIRECTORY expands it and
+      // still throws focus to the editor. Use l / h on directories, which Zed's
+      // netrw block already binds to expand / collapse and leave focus put.
+      "enter": ["workspace::SendKeystrokes", "t escape"],
+      // "t" alone still opens while keeping focus in the tree
+      "v": ["workspace::SendKeystrokes", "v escape"],
+      "o": ["workspace::SendKeystrokes", "o escape"],
+
+      "q": "vim::ToggleProjectPanelFocus",
+      // same chord that opened it closes it
+      "space p e": "workspace::ToggleRightDock",
+      "space p q": "workspace::ToggleRightDock",
+      "space w e": "vim::ToggleProjectPanelFocus",
+
+      // The global block cannot reach here: this context claims the
+      // "space p" prefix, and a deeper context owning a prefix shadows
+      // every longer chord starting with it. So the set is repeated.
+      "space p f": "file_finder::Toggle",
+      "space p g": "pane::DeploySearch",
+      "space p p": "projects::OpenRecent",
+      "space p s": "project_symbols::Toggle",
+      "space p o": "outline::Toggle",
+      "space g s": "git_panel::ToggleFocus",
+      "space g d": "git::Diff",
+      "space g w": "git::Worktree",
+      "space g shift-C": "git::Branch",
+      "space g shift-B": "branches::OpenRecent",
+      "space b b": "tab_switcher::Toggle",
+      "space b f": "file_finder::Toggle",
+      "space space": "tab_switcher::Toggle",
+      "space l v": "zed::Extensions",
+      "space l d": "diagnostics::Deploy",
+      "space w g": "git_panel::ToggleFocus",
+      "space w u": "outline_panel::ToggleFocus",
+      "space w t": "terminal_panel::ToggleFocus",
+      "space u": "git::Diff",
+      "space w h": "workspace::ActivatePaneLeft",
+      "space w j": "workspace::ActivatePaneDown",
+      "space w k": "workspace::ActivatePaneUp",
+      "space w l": "workspace::ActivatePaneRight",
+      "space w w": "workspace::ActivateNextPane",
+      "space w p": "workspace::ActivatePreviousPane",
+      "space w v": "pane::SplitVertical",
+      "space w s": "pane::SplitHorizontal",
+      "space w q": "pane::CloseActiveItem",
+      "space w o": "workspace::CloseInactiveTabsAndPanes",
+      "space w x": "workspace::SwapPaneAdjacent",
+      "space w shift-h": "workspace::MovePaneLeft",
+      "space w shift-j": "workspace::MovePaneDown",
+      "space w shift-k": "workspace::MovePaneUp",
+      "space w shift-l": "workspace::MovePaneRight",
+      "space b n": "pane::ActivateNextItem",
+      "space b p": "pane::ActivatePreviousItem",
+      "space b l": "pane::ActivateLastItem",
+      "space b a": "pane::AlternateFile",
+      "space b d": "pane::CloseActiveItem",
+      "space b 1": ["pane::ActivateItem", 0],
+      "space b 2": ["pane::ActivateItem", 1],
+      "space b 3": ["pane::ActivateItem", 2],
+      "space b 4": ["pane::ActivateItem", 3],
+      "space b 5": ["pane::ActivateItem", 4],
+      "space b 6": ["pane::ActivateItem", 5],
+      "space b 7": ["pane::ActivateItem", 6],
+      "space b 8": ["pane::ActivateItem", 7],
+      "space b 9": ["pane::ActivateItem", 8],
+
+      "a": "project_panel::NewFile",
+      "shift-a": "project_panel::NewDirectory",
+      "shift-y": "workspace::CopyRelativePath"
+    }
+  },
+
+  // ── insert mode ──
+  {
+    "context": "vim_mode == insert",
+    "bindings": {
+      // "j k": "vim::NormalBefore"
+    }
+  }
+]
