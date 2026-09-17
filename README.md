@@ -21,7 +21,6 @@ Nothing installs automatically. Each entry is symlinked into `$HOME` by hand (se
 | `bin/` | `~/bin` (on `PATH` via `.zshenv`) | Scripts. See [Scripts](#scripts) |
 | `lib/herdr_numbering.py` | read by `bin/herdr-*` Python scripts | Shared helpers that rebuild herdr's sidebar order for spaces and agents |
 | `launchd/in.ameernoufil.herdr-sidebar-numbers.plist` | `~/Library/LaunchAgents/` (copied, not linked) | Keeps `herdr-sidebar-numbers` running from login, logs to `~/.config/herdr/sidebar-numbers.log` |
-| `tests/` | not linked | zsh tests for the two worktree scripts |
 
 ## Scripts
 
@@ -89,12 +88,3 @@ The plist hardcodes `/Users/ameer.noufil` and `/opt/homebrew/bin/python3` (the s
 herdr and zed link single files because those directories also hold logs, sockets, sessions and themes that should stay out of git.
 
 `.zshenv` and `.zshrc.local` are gitignored, so a new machine needs them copied over separately.
-
-## Tests
-
-```sh
-zsh tests/herdr-worktree-create.test.zsh
-zsh tests/herdr-worktree-finder.test.zsh
-```
-
-Both stub `git`, `herdr` and `fzf` as shell functions and source the real script, so they need no repo or herdr server.
