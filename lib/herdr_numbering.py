@@ -20,9 +20,10 @@ CONFIG_PATH = os.environ.get(
 ATTENTION_PRIORITY = {"blocked": 4, "done": 3, "working": 2, "idle": 1, "unknown": 0}
 
 
-def run(args: list[str]) -> str:
+def run(args: list[str], machine: str | None = None) -> str:
+    prefix = ["--machine", machine] if machine else []
     result = subprocess.run(
-        [HERDR, *args], capture_output=True, text=True, timeout=20, check=False
+        [HERDR, *prefix, *args], capture_output=True, text=True, timeout=20, check=False
     )
     if result.returncode != 0:
         raise RuntimeError(
@@ -31,8 +32,13 @@ def run(args: list[str]) -> str:
     return result.stdout
 
 
-def snapshot() -> dict:
-    return json.loads(run(["api", "snapshot"]))["result"]["snapshot"]
+def snapshot(machine: str | None = None) -> dict:
+    return json.loads(run(["api", "snapshot"], machine))["result"]["snapshot"]
+
+
+def machines() -> list[str]:
+    """Enabled saved SSH machines, in the order the sidebar lists them after Local."""
+    return [m["id"] for m in json.loads(run(["machine", "list", "--json"])) if m["enabled"]]
 
 
 def agent_panel_sort() -> str:

@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.realpath
 from herdr_numbering import (  # noqa: E402
     agent_order,
     agent_panel_sort,
+    machines,
     run,
     snapshot,
     visible_workspace_order,
@@ -27,39 +28,55 @@ from herdr_numbering import (  # noqa: E402
 SOURCE = "sidebar-numbers"
 TOKEN = "idx"
 
-
-def desired_numbers(sort: str) -> dict[str, dict[str, str]]:
-    snap = snapshot()
-    workspaces = snap.get("workspaces", [])
-    spaces = {
-        workspaces[ws_index]["workspace_id"]: str(position)
-        for position, ws_index in enumerate(visible_workspace_order(workspaces), start=1)
-    }
-    panes = {
-        agent["pane_id"]: str(position)
-        for position, agent in enumerate(agent_order(snap.get("agents", []), sort), start=1)
-    }
-    return {"workspace": spaces, "pane": panes}
+# (machine, kind) -> {target: number}; machine None is Local.
+Numbers = dict[tuple[str | None, str], dict[str, str]]
 
 
-def stamp(kind: str, target: str, value: str | None) -> None:
+def desired_numbers(sort: str) -> Numbers:
+    """Number Local first, then each SSH machine, continuing the count like the sidebar."""
+    numbers: Numbers = {}
+    next_space = next_agent = 1
+    for machine in [None, *machines()]:
+        try:
+            snap = snapshot(machine)
+        except RuntimeError as error:
+            if machine is None:
+                raise
+            print(f"herdr-sidebar-numbers: skipping {machine}: {error}", file=sys.stderr, flush=True)
+            continue
+        workspaces = snap.get("workspaces", [])
+        order = visible_workspace_order(workspaces)
+        numbers[(machine, "workspace")] = {
+            workspaces[i]["workspace_id"]: str(n) for n, i in enumerate(order, start=next_space)
+        }
+        agents = agent_order(snap.get("agents", []), sort)
+        numbers[(machine, "pane")] = {
+            a["pane_id"]: str(n) for n, a in enumerate(agents, start=next_agent)
+        }
+        next_space += len(order)
+        next_agent += len(agents)
+    return numbers
+
+
+def stamp(machine: str | None, kind: str, target: str, value: str | None) -> None:
     args = [kind, "report-metadata", target, "--source", SOURCE]
     args += ["--clear-token", TOKEN] if value is None else ["--token", f"{TOKEN}={value}"]
-    run(args)
+    run(args, machine)
 
 
-def sync(previous: dict[str, dict[str, str]], sort: str) -> dict[str, dict[str, str]]:
+def sync(previous: Numbers, sort: str) -> Numbers:
     current = desired_numbers(sort)
-    for kind in ("workspace", "pane"):
-        old, new = previous.get(kind, {}), current[kind]
+    for key in current.keys() | previous.keys():
+        machine, kind = key
+        old, new = previous.get(key, {}), current.get(key, {})
         for target, value in new.items():
             if old.get(target) != value:
-                stamp(kind, target, value)
+                stamp(machine, kind, target, value)
         for target in old.keys() - new.keys():
             try:
-                stamp(kind, target, None)
+                stamp(machine, kind, target, None)
             except RuntimeError:
-                pass  # target is gone; its metadata went with it
+                pass  # target or machine is gone
     return current
 
 
@@ -70,7 +87,7 @@ def main() -> int:
     args = parser.parse_args()
 
     sort = agent_panel_sort()
-    previous: dict[str, dict[str, str]] = {}
+    previous: Numbers = {}
     while True:
         try:
             previous = sync(previous, sort)

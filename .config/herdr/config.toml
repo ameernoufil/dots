@@ -20,12 +20,6 @@ command = "herdr-sessionizer"
 description = "find project folder"
 
 [[keys.command]]
-key = "prefix+t"
-type = "pane"
-command = "herdr-worktree-finder"
-description = "find worktree in current repository"
-
-[[keys.command]]
 key = "prefix+shift+t"
 type = "pane"
 command = "herdr-worktree-create"
@@ -45,3 +39,7 @@ rows = [["$idx", "state_icon", "workspace", "tab"], ["agent"]]
 
 [ui.toast]
 delivery = "system"
+
+[theme]
+name = "rose-pine"
+auto_switch = false

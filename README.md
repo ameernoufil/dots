@@ -31,10 +31,21 @@ Nothing installs automatically. Each entry is symlinked into `$HOME` by hand (se
 | `herdr-sessionizer` | zsh | `prefix f` in herdr | Focuses the herdr workspace for the folder, or creates it. Outside herdr, starts a named session |
 | `herdr-worktree-finder` | zsh | `prefix t` in herdr | fzf over the current repo's worktrees (`●` means already open) and focuses or opens one |
 | `herdr-worktree-create` | zsh | `prefix shift+t` in herdr | Fetches origin, picks a remote branch with fzf, or `>name` for a new branch from a chosen source, then `herdr worktree create` |
-| `herdr-sidebar-numbers` | Python | launchd agent at login | Every 2s stamps each space and agent pane with an `idx` metadata token so the expanded sidebar shows position numbers, which match herdr's `prefix+shift+1..9` agent jump. `--once` runs a single pass |
+| `herdr-sidebar-numbers` | Python | launchd agent at login | Every 2s stamps each space and agent pane with an `idx` metadata token so the expanded sidebar shows position numbers, which match herdr's `prefix+shift+1..9` agent jump. Saved SSH machines (`herdr machine list`) are numbered after Local, continuing the count. `--once` runs a single pass |
 | `fzf-git.sh` | bash/zsh, sourced | `Ctrl-G` then `Ctrl-F/B/T/R/H/S/L/W/E` | Vendored copy of junegunn/fzf-git.sh (MIT). `Ctrl-G ?` lists the bindings |
 
 `herdr-sidebar-numbers` is also linked from `~/.local/bin/` so herdr can find it without `~/bin` on its `PATH`.
+
+## herdr plugins
+
+Plugins live in herdr's own plugin directory, not in this repo. Install on a new machine:
+
+```sh
+herdr plugin install kryptamine/herdr-auto-title --yes
+herdr plugin action invoke herdr.auto-title.restart
+```
+
+[Auto Title](https://github.com/kryptamine/herdr-auto-title) names tabs and panes after the work in them, and leaves any you rename by hand alone.
 
 ## Neovim
 
