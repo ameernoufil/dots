@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+"""Usage: llm-speed [runs] [KEY_VAR ...]
+Benchmarks every model each key can see on the LiteLLM proxy with a FreeFlow-style cleanup prompt."""
+import json, os, statistics, sys, time, urllib.request
+from concurrent.futures import ThreadPoolExecutor
+
+BASE = os.environ.get("LITELLM_BASE", "https://grid.ai.juspay.net/v1")
+RUNS = int(sys.argv[1]) if len(sys.argv) > 1 else 3
+KEYS = sys.argv[2:] or sorted(k for k in os.environ if k.startswith("JUSPAY") and k.endswith("API_KEY"))
+PROMPT = 'Clean up this dictated text, fix punctuation, output only the result: "um so i think we should uh ship the the feature on friday and then maybe fix the bugs next week"'
+IMG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg=="
+
+def call(key, path, body=None):
+    req = urllib.request.Request(BASE + path, json.dumps(body).encode() if body else None,
+                                 {"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        return json.load(r)
+
+def bench(key, model):
+    times, toks = [], 0
+    try:
+        for _ in range(RUNS):
+            t = time.time()
+            r = call(key, "/chat/completions", {"model": model, "max_tokens": 200, "messages": [{"role": "user", "content": PROMPT}]})
+            times.append(time.time() - t); toks = r["usage"]["completion_tokens"]
+    except Exception as e:
+        return model, None, str(getattr(e, "code", e))
+    try:
+        call(key, "/chat/completions", {"model": model, "max_tokens": 20, "messages": [{"role": "user", "content": [
+            {"type": "text", "text": "What color is this image? One word."}, {"type": "image_url", "image_url": {"url": IMG}}]}]})
+        img = "yes"
+    except Exception:
+        img = "no"
+    return model, (statistics.median(times), min(times), round(toks / min(times))), img
+
+for var in KEYS:
+    key = os.environ.get(var)
+    print(f"\n=== {var}")
+    if not key:
+        print("unset"); continue
+    try:
+        models = [m["id"] for m in call(key, "/models")["data"] if "embedding" not in m["id"]]
+    except Exception as e:
+        print("key rejected:", getattr(e, "code", e)); continue
+    with ThreadPoolExecutor(8) as ex:
+        rows = list(ex.map(lambda m: bench(key, m), models))
+    print(f"{'MODEL':40} {'MEDIAN_S':>8} {'MIN_S':>6} {'TOK/S':>6} IMAGE")
+    for m, s, img in sorted(rows, key=lambda r: r[1][0] if r[1] else 1e9):
+        print(f"{m:40} {s[0]:8.2f} {s[1]:6.2f} {s[2]:6} {img}" if s else f"{m:40} FAILED ({img})")

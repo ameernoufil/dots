@@ -179,6 +179,10 @@ alt-shift-semicolon = 'mode service'
 
 # Custom tilings
 [[on-window-detected]]
+if.app-id = 'net.juspay.xyne.omx'
+run = 'layout floating'
+
+[[on-window-detected]]
 if.app-id = 'com.apple.finder'
 run = 'layout floating'
 

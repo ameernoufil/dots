@@ -31,15 +31,28 @@ if (( fetch_status != 0 )); then
     exit $fetch_status
 fi
 
+worktree_json=$(herdr worktree list --cwd "$repo_root")
+worktree_status=$?
+if (( worktree_status != 0 )); then
+    print -u2 "Failed to list worktrees for the current repository."
+    read "?Press Enter to close..."
+    exit $worktree_status
+fi
+
 target_output=$(
-    git -C "$repo_root" for-each-ref \
-        --format='%(refname:short)' \
-        refs/remotes/origin |
-        grep -v '/HEAD$' |
-        sort -u |
+    {
+        print -r -- "$worktree_json" |
+            jq -r '.result.worktrees[] | select(.branch) |
+                (if .open_workspace_id then "● " else "○ " end) + .branch'
+        git -C "$repo_root" for-each-ref \
+            --format='%(refname:short)' \
+            refs/remotes/origin |
+            grep -v '/HEAD$' |
+            sort -u
+    } |
         fzf \
-            --prompt="Worktree branch: " \
-            --header="Enter: use selected branch | >branch-name: create new branch" \
+            --prompt="Worktree: " \
+            --header="● open  ○ closed worktree | Enter: open or create | >branch-name: new branch" \
             --print-query
 )
 fzf_status=$?
@@ -58,6 +71,7 @@ if [[ $typed_query == '>'* ]]; then
     target_ref=${typed_query#>}
 elif (( fzf_status == 0 )); then
     target_ref=$(print -r -- "$target_output" | tail -n 1)
+    target_ref=${${target_ref#● }#○ }
 else
     print -u2 "No existing branch selected. Prefix a new branch with '>'."
     read "?Press Enter to close..."
@@ -70,6 +84,20 @@ if [[ -z $new_branch ]]; then
     print -u2 "A new branch name is required."
     read "?Press Enter to close..."
     exit 1
+fi
+
+existing=$(
+    print -r -- "$worktree_json" |
+        jq -r --arg b "$new_branch" '.result.worktrees[] | select(.branch == $b) |
+            [.path, (.open_workspace_id // "")] | @tsv' |
+        head -n 1
+)
+if [[ -n $existing ]]; then
+    workspace_id=${existing#*$'\t'}
+    if [[ -n $workspace_id ]]; then
+        exec herdr workspace focus "$workspace_id"
+    fi
+    exec herdr worktree open --cwd "$repo_root" --path "${existing%%$'\t'*}" --focus
 fi
 
 # Existing origin branches start their local worktree branch from that remote.
@@ -94,8 +122,8 @@ else
     [[ -z $source_branch ]] && exit 0
 
     print -r -- "Branch '$new_branch' does not exist on origin."
-    read "create_branch?Create it from '$source_branch'? [y/N] "
-    if [[ $create_branch != [yY] ]]; then
+    read "create_branch?Create it from '$source_branch'? [Y/n] "
+    if [[ $create_branch == [nN]* ]]; then
         exit 0
     fi
     base_branch="$source_branch"

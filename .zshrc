@@ -107,8 +107,8 @@ alias vim="nvim"
 alias vimzsh="vim ~/.zshrc"
 
 # Autocompletion
-if [ -z "$SSH_CONNECTION" ] && [ -f "$HOME/Downloads/google-cloud-sdk/completion.zsh.inc" ]; then
-	source "$HOME/Downloads/google-cloud-sdk/completion.zsh.inc"
+if [ -z "$SSH_CONNECTION" ] && [ -f "$HOME/google-cloud-sdk/completion.zsh.inc" ]; then
+	source "$HOME/google-cloud-sdk/completion.zsh.inc"
 fi
 
 if [ -s "$HOME/.bun/_bun" ]; then
@@ -136,3 +136,6 @@ export PATH="$HOME/.orbstack/bin:$PATH"
 
 # bun completions
 [ -s "/Users/ameer.noufil/.bun/_bun" ] && source "/Users/ameer.noufil/.bun/_bun"
+
+# Hutch
+export PATH='/Users/ameer.noufil/.hutch/bin':"$PATH"

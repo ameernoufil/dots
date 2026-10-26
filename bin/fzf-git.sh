@@ -60,7 +60,22 @@ if [[ $1 == --list ]]; then
   shift
   if [[ $# -eq 1 ]]; then
     branches() {
-      git branch "$@" --sort=-committerdate --sort=-HEAD --format=$'%(HEAD) %(color:yellow)%(refname:short) %(color:green)(%(committerdate:relative))\t%(color:blue)%(subject)%(color:reset)' --color=$(__fzf_git_color) | column -ts$'\t'
+      # local patch: with a query, branch-name matches first, then a divider,
+      # then matches on date/subject. The divider repeats the query so the
+      # outer fzf (--no-sort) keeps it.
+      local raw top n=-1
+      raw=$(git branch "$@" --sort=-committerdate --sort=-HEAD --format=$'%(HEAD) %(refname:short)\t(%(committerdate:relative))\t%(subject)')
+      if [[ -n $FZF_QUERY ]]; then
+        top=$(fzf --filter "$FZF_QUERY" --delimiter '\t' --nth 1 --tiebreak begin <<< "$raw")
+        n=$(printf '%s' "$top" | grep -c '')
+        raw=$([[ -n $top ]] && echo "$top"; fzf --filter "$FZF_QUERY" <<< "$raw" | grep -vxF -e "$top")
+      fi
+      if [[ $(__fzf_git_color) != never ]]; then
+        awk -F'\t' '{printf "\033[33m%s\t\033[32m%s\t\033[34m%s\033[m\n", $1, $2, $3}'
+      else
+        cat
+      fi <<< "$raw" | column -ts$'\t' |
+        awk -v n="$n" 'NR==n+1 {print "  ── other matches: " ENVIRON["FZF_QUERY"]} 1'
     }
     refs() {
       git for-each-ref "$@" --sort=-creatordate --sort=-HEAD --color=$(__fzf_git_color) --format=$'%(if:equals=refs/remotes)%(refname:rstrip=-2)%(then)%(color:magenta)remote-branch%(else)%(if:equals=refs/heads)%(refname:rstrip=-2)%(then)%(color:brightgreen)branch%(else)%(if:equals=refs/tags)%(refname:rstrip=-2)%(then)%(color:brightcyan)tag%(else)%(if:equals=refs/stash)%(refname:rstrip=-2)%(then)%(color:brightred)stash%(else)%(color:white)%(refname:rstrip=-2)%(end)%(end)%(end)%(end)\t%(color:yellow)%(refname:short) %(color:green)(%(creatordate:relative))\t%(color:blue)%(subject)%(color:reset)' | column -ts$'\t'
@@ -300,7 +315,8 @@ _fzf_git_branches() {
   __fzf_git_fzf=$(declare -f _fzf_git_fzf) _fzf_git_fzf --ansi \
     --border-label '🌳 All branches ' \
     --header-lines 2 \
-    --tiebreak begin \
+    --no-sort \
+    --bind "change:reload:bash \"$__fzf_git\" --list \$([[ \$FZF_BORDER_LABEL == *All* ]] && echo all-)branches" \
     --preview-window right,55% \
     --color hl:underline,hl+:underline \
     --no-hscroll \
@@ -310,7 +326,7 @@ _fzf_git_branches() {
     --bind "alt-h:become:LIST_OPTS=\$(cut -c3- <<< {} | cut -d' ' -f1) $shell \"$__fzf_git\" --run hashes" \
     --bind "alt-enter:become:printf '%s\n' {+} | cut -c3- | sed 's@[^/]*/@@'" \
     --preview "bash \"$__fzf_git\" --run branch_preview \$(cut -c3- <<< {} | cut -d' ' -f1)" "$@" |
-  sed 's/^\* //' | awk '{print $1}' # Slightly modified to work with hashes as well
+  sed 's/^\* //' | awk '!/^  ──/ {print $1}' # Slightly modified to work with hashes as well
 }
 
 _fzf_git_tags() {

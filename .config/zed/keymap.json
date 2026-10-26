@@ -10,7 +10,7 @@
   {
     "context": "Workspace && !Editor && !Terminal && !Picker && !menu",
     "bindings": {
-      "space p f": "file_finder::Toggle",
+      "space f": "file_finder::Toggle",
       "space p g": "pane::DeploySearch",
       "space p e": "project_panel::ToggleFocus",
       "space p p": "projects::OpenRecent",
@@ -18,7 +18,7 @@
       "space p o": "outline::Toggle",
       "space g s": "git_panel::ToggleFocus",
       "space g d": "git::Diff",
-      "space g w": "git::Worktree",
+      "space shift-t": "git::Worktree",
       "space g shift-C": "git::Branch",
       "space g shift-B": "branches::OpenRecent",
       "space b b": "tab_switcher::Toggle",
@@ -75,7 +75,7 @@
       "space y": ["workspace::SendKeystrokes", "\" + y"],
 
       // <leader>pf / <leader>pg  ->  telescope find_files / live_grep
-      "space p f": "file_finder::Toggle",
+      "space f": "file_finder::Toggle",
       "space p g": "pane::DeploySearch",
       // <leader>pe  ->  netrw / :Ex
       "space p e": "project_panel::ToggleFocus",
@@ -122,7 +122,7 @@
       "g y": "editor::GoToTypeDefinition",
 
       // ── <leader>g git / worktree ──
-      "space g w": "git::Worktree",
+      "space shift-t": "git::Worktree",
       "space g shift-B": "branches::OpenRecent",
       "space g shift-C": "git::Branch",
       "space p p": "projects::OpenRecent",
@@ -225,14 +225,14 @@
       // The global block cannot reach here: this context claims the
       // "space g" prefix, and a deeper context owning a prefix shadows
       // every longer chord starting with it. So the set is repeated.
-      "space p f": "file_finder::Toggle",
+      "space f": "file_finder::Toggle",
       "space p g": "pane::DeploySearch",
       "space p e": "project_panel::ToggleFocus",
       "space p p": "projects::OpenRecent",
       "space p s": "project_symbols::Toggle",
       "space p o": "outline::Toggle",
       "space g d": "git::Diff",
-      "space g w": "git::Worktree",
+      "space shift-t": "git::Worktree",
       "space g shift-C": "git::Branch",
       "space g shift-B": "branches::OpenRecent",
       "space b b": "tab_switcher::Toggle",
@@ -370,14 +370,14 @@
       // The global block cannot reach here: this context claims the
       // "space p" prefix, and a deeper context owning a prefix shadows
       // every longer chord starting with it. So the set is repeated.
-      "space p f": "file_finder::Toggle",
+      "space f": "file_finder::Toggle",
       "space p g": "pane::DeploySearch",
       "space p p": "projects::OpenRecent",
       "space p s": "project_symbols::Toggle",
       "space p o": "outline::Toggle",
       "space g s": "git_panel::ToggleFocus",
       "space g d": "git::Diff",
-      "space g w": "git::Worktree",
+      "space shift-t": "git::Worktree",
       "space g shift-C": "git::Branch",
       "space g shift-B": "branches::OpenRecent",
       "space b b": "tab_switcher::Toggle",

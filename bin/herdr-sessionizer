@@ -5,6 +5,7 @@ if [[ $# -eq 1 ]]; then
     selected=$1
 else
     selected=$({
+        echo "~"
         find ~/ -mindepth 1 -maxdepth 1 -type d ! -path "$HOME/work" ! -path "$HOME/personal"
         find ~/work ~/personal -mindepth 1 -maxdepth 2 -type d
     } | fzf)
@@ -14,7 +15,9 @@ if [[ -z $selected ]]; then
     exit 0
 fi
 
+[[ $selected == "~" ]] && selected=$HOME
 selected_name=$(basename "$selected" | tr . _)
+[[ $selected == "$HOME" ]] && selected_name="~"
 
 # Inside Herdr, focus the project's workspace or create it when missing
 if [[ -n $HERDR_ENV ]]; then
